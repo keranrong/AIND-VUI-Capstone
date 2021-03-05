@@ -1,6 +1,6 @@
 from keras import backend as K
 from keras.models import Model
-from keras.layers import (BatchNormalization, Conv1D, Dense, Input, 
+from keras.layers import (BatchNormalization, Conv1D, Dense, Input, Dropout,
     TimeDistributed, Activation, Bidirectional, SimpleRNN, GRU, LSTM)
 
 def simple_rnn_model(input_dim, output_dim=29):
@@ -129,7 +129,7 @@ def bidirectional_rnn_model(input_dim, units, output_dim=29):
     input_data = Input(name='the_input', shape=(None, input_dim))
     # TODO: Add bidirectional recurrent layer
     activation='relu'
-    bidir_rnn = Bidirectional(LSTM(units, activation=activation,
+    bidir_rnn = Bidirectional(GRU(units, activation=activation,
                         return_sequences=True, implementation=2, name='rnn'),merge_mode='concat')(input_data)
                              
     # TODO: Add a TimeDistributed(Dense(output_dim)) layer
@@ -142,7 +142,7 @@ def bidirectional_rnn_model(input_dim, units, output_dim=29):
     print(model.summary())
     return model
 
-def final_model():
+def final_model(input_dim=13, units=200, recur_layers=2, output_dim=29, dropout_rate=0.2):
     """ Build a deep network for speech 
     """
     # Main acoustic input
@@ -151,12 +151,12 @@ def final_model():
     activation='relu'
     for layer in range(recur_layers):
         if layer == 0:
-            simple_rnn = LSTM(units, activation=activation,
+            simple_rnn = GRU(units, activation=activation,
                              return_sequences=True, implementation=2, name='rnn'+str(layer+1))(input_data)
             bn_rnn = BatchNormalization()(simple_rnn)
             drop_out_rnn = Dropout(rate=dropout_rate)(bn_rnn)
         else:
-            simple_rnn = LSTM(units, activation=activation,
+            simple_rnn = GRU(units, activation=activation,
                              return_sequences=True, implementation=2, name='rnn'+str(layer+1))(bn_rnn)
             bn_rnn = BatchNormalization()(simple_rnn)
             drop_out_rnn = Dropout(rate=dropout_rate)(bn_rnn)
